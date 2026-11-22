@@ -141,7 +141,7 @@
     </div>
 
     <div id="toast" class="toast">Copied!</div>
-    <script>
+       <script>
         const DEFAULT_DATA = [
             { id: 1, category: 'phrases', text: 'Local Bridge down!', note: '', pinned: true },
             { id: 2, category: 'phrases', text: 'Global Bridge down!', note: '', pinned: true },
@@ -241,8 +241,7 @@
                 showToast(toastMsg);
             });
         }
-
-        function renderItems() {
+         function renderItems() {
             const list = document.getElementById('itemsList');
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             const isGrid = (currentTab === 'emojis' || currentTab === 'heroes') && !query;
@@ -345,8 +344,6 @@
             const note = document.getElementById('itemNote').value.trim();
             if (!text) { showToast('Please enter text!'); return; }
 
-            if (editingId) {
-                const idx = items.findIndex(i => i.id === editingId);
             if (editingId) {
                 const idx = items.findIndex(i => i.id === editingId);
                 if (idx > -1) { items[idx].category = category; items[idx].text = text; items[idx].note = note; }
