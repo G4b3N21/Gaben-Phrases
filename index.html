@@ -81,9 +81,15 @@
             </div>
         </div>
 
-        <div id="combineBar" class="combine-bar">
+                <div id="combineBar" class="combine-bar">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="heroCounter" style="font-size:0.78rem; font-weight:700; color:#38bdf8;"></span>
+                <div style="display:flex; gap:8px;">
+                    <button class="combine-clear" style="color:#cbd5e1;" onclick="undoCombined()">↩️ Undo</button>
+                    <button class="combine-clear" onclick="clearCombined()">Clear</button>
+                </div>
+            </div>
             <div id="combinePreview" class="combine-preview">Tap items or heroes to combine...</div>
-            <button class="combine-clear" onclick="clearCombined()">Clear</button>
         </div>
 
         <div class="search-wrap">
@@ -198,10 +204,30 @@
             if (!combineMode) { combinedBuffer = []; updateCombinePreview(); }
         }
 
+        function undoCombined() {
+            if (combinedBuffer.length > 0) {
+                combinedBuffer.pop();
+                updateCombinePreview();
+                const fullText = combinedBuffer.map(x => x.text).join(' ');
+                if (fullText) copyTextToClipboard(fullText, 'Undone & Copied!');
+                else showToast('Removed last item');
+            }
+        }
+
         function clearCombined() { combinedBuffer = []; updateCombinePreview(); }
 
         function updateCombinePreview() {
-            document.getElementById('combinePreview').innerText = combinedBuffer.length ? combinedBuffer.join(' ') : 'Tap items or heroes to combine...';
+            const previewEl = document.getElementById('combinePreview');
+            const counterEl = document.getElementById('heroCounter');
+            previewEl.innerText = combinedBuffer.length ? combinedBuffer.map(x => x.text).join(' ') : 'Tap items or heroes to combine...';
+            
+            const heroCount = combinedBuffer.filter(x => x.category === 'heroes').length;
+            if (heroCount > 0) {
+                counterEl.innerText = `🦸 Team: ${heroCount}/5` + (heroCount === 5 ? ' ✅' : heroCount > 5 ? ' ⚠️' : '');
+                counterEl.style.color = heroCount === 5 ? '#4ade80' : heroCount > 5 ? '#f87171' : '#38bdf8';
+            } else {
+                counterEl.innerText = '';
+            }
         }
 
         function resolvePlaceholders(text) {
@@ -216,6 +242,24 @@
             }
             return result;
         }
+
+        function handleCardClick(item) {
+            const finalText = resolvePlaceholders(item.text);
+            if (finalText === null) return;
+
+            if (combineMode) {
+                if (item.category === 'heroes' && combinedBuffer.some(x => x.category === 'heroes' && x.text === finalText)) {
+                    showToast(finalText + ' is already in the team!');
+                    return;
+                }
+                combinedBuffer.push({ text: finalText, category: item.category });
+                updateCombinePreview();
+                copyTextToClipboard(combinedBuffer.map(x => x.text).join(' '), 'Combined & Copied!');
+            } else {
+                copyTextToClipboard(finalText, 'Copied: ' + finalText);
+            }
+        }
+
 
         function handleCardClick(item) {
             const finalText = resolvePlaceholders(item.text);
