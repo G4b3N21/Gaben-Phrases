@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="apple-touch-icon" href="ikon.jpg">
+    <link rel="icon" type="image/jpeg" href="ikon.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Guild QuickChat">
+    <title>Guild QuickChat</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, #1e1b4b, #09090b 60%, #0f172a);
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 16px 90px 16px;
+        }
+        .app-wrapper { width: 100%; max-width: 460px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        h1 { font-size: 1.35rem; font-weight: 800; background: linear-gradient(to right, #a855f7, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-actions { display: flex; gap: 8px; }
+        .icon-btn { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: #e2e8f0; padding: 7px 11px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .icon-btn.active { background: rgba(168, 85, 247, 0.25); border-color: #a855f7; color: #fff; box-shadow: 0 0 12px rgba(168, 85, 247, 0.3); }
+        .combine-bar { display: none; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; align-items: center; justify-content: space-between; gap: 8px; }
+        .combine-bar.visible { display: flex; }
+        .combine-preview { font-size: 0.85rem; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .combine-clear { background: rgba(255, 255, 255, 0.1); border: none; color: #fca5a5; padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+        .search-box { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 11px 14px; color: #fff; font-size: 0.95rem; outline: none; margin-bottom: 14px; backdrop-filter: blur(12px); }
+        .search-box:focus { border-color: #38bdf8; }
+        .search-box::placeholder { color: #64748b; }
+        .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; background: rgba(255, 255, 255, 0.04); padding: 5px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 16px; }
+        .tab-btn { background: transparent; border: none; color: #94a3b8; padding: 10px 6px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .tab-btn.active { background: linear-gradient(135deg, rgba(147, 51, 234, 0.4), rgba(37, 99, 235, 0.4)); color: #fff; border: 1px solid rgba(168, 85, 247, 0.4); }
+        .items-list { display: flex; flex-direction: column; gap: 10px; }
+        .items-list.emoji-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; }
+        .card:active { transform: scale(0.98); background: rgba(168, 85, 247, 0.18); }
+        .card.pinned { border-color: rgba(250, 204, 21, 0.35); background: rgba(250, 204, 21, 0.04); }
+        .card-content { flex: 1; min-width: 0; }
+        .card-main { font-size: 0.98rem; font-weight: 500; color: #f8fafc; word-wrap: break-word; line-height: 1.4; }
+        .emoji-grid .card-main { font-size: 1.15rem; text-align: center; }
+        .card-note { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; line-height: 1.3; }
+        .card-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .emoji-grid .card { flex-direction: column; padding: 12px 8px; text-align: center; }
+        .ctrl-btn { background: rgba(255, 255, 255, 0.06); border: none; color: #94a3b8; width: 30px; height: 30px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .ctrl-btn.starred { color: #facc15; background: rgba(250, 204, 21, 0.15); }
+        .fab-add { position: fixed; bottom: 22px; right: 22px; background: linear-gradient(135deg, #9333ea, #2563eb); color: white; border: none; border-radius: 20px; padding: 14px 20px; font-size: 0.95rem; font-weight: 700; box-shadow: 0 10px 25px rgba(147, 51, 234, 0.5); cursor: pointer; z-index: 50; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { width: 100%; max-width: 400px; background: #131524; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 22px; padding: 22px; }
+        .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; color: #fff; }
+        .modal-input, .modal-select { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 12px; color: #fff; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
+        .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+        .btn-cancel { background: rgba(255, 255, 255, 0.08); border: none; color: #cbd5e1; padding: 10px 16px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        .btn-save { background: linear-gradient(135deg, #9333ea, #2563eb); border: none; color: #fff; padding: 10px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(16, 185, 129, 0.95); color: white; padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 200; white-space: nowrap; }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <div class="header">
+            <h1>⚔️ Guild QuickChat</h1>
+            <div class="header-actions">
+                <button id="combineToggle" class="icon-btn" onclick="toggleCombine()">➕ Combine</button>
+                <button class="icon-btn" onclick="openBackupModal()">💾 Backup</button>
+            </div>
+        </div>
+
+        <div id="combineBar" class="combine-bar">
+            <div id="combinePreview" class="combine-preview">Tap items to combine...</div>
+            <button class="combine-clear" onclick="clearCombined()">Clear</button>
+        </div>
+
+        <input type="text" id="searchInput" class="search-box" oninput="renderItems()" placeholder="🔍 Search phrases, emojis, slang...">
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('phrases', this)">💬 Phrases</button>
+            <button class="tab-btn" onclick="switchTab('emojis', this)">💥 Emojis</button>
+            <button class="tab-btn" onclick="switchTab('slang', this)">📖 Slang</button>
+        </div>
+
+        <div id="itemsList" class="items-list"></div>
+    </div>
+
+    <button class="fab-add" onclick="openAddModal()">+ Add New</button>
+
+    <div id="itemModal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modalTitle" class="modal-title">Add New Item</div>
+            <select id="itemCategory" class="modal-select">
+                <option value="phrases">💬 Phrase</option>
+                <option value="emojis">💥 Emoji / Combo</option>
+                <option value="slang">📖 Slang / Abbreviation</option>
+            </select>
+            <input type="text" id="itemText" class="modal-input" placeholder="Text, Emoji, or Slang (e.g. Local Bridge down!)">
+            <input type="text" id="itemNote" class="modal-input" placeholder="Short meaning / note (optional)">
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal('itemModal')">Cancel</button>
+                <button class="btn-save" onclick="saveItem()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="backupModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">💾 Backup & Restore</div>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">Copy this code to save your database, or paste a saved code below to restore.</p>
+            <textarea id="backupData" class="modal-input" style="height: 110px; font-size: 0.75rem;"></textarea>
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal('backupModal')">Close</button>
+                <button class="btn-cancel" style="color: #38bdf8;" onclick="copyBackup()">Copy Code</button>
+                <button class="btn-save" onclick="restoreBackup()">Restore</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Copied!</div>
+    <script>
+        const DEFAULT_DATA = [
+            { id: 1, category: 'phrases', text: 'Local Bridge down!', note: '', pinned: true },
+            { id: 2, category: 'phrases', text: 'Global Bridge down!', note: '', pinned: true },
+            { id: 3, category: 'phrases', text: 'Hi all! Chill day today.', note: '', pinned: false },
+            { id: 4, category: 'phrases', text: 'Can someone drop a defense team in training?', note: '', pinned: false },
+            { id: 5, category: 'emojis', text: 'BOOM! 💥', note: '', pinned: true },
+            { id: 6, category: 'emojis', text: '👊', note: '', pinned: true },
+            { id: 7, category: 'emojis', text: 'GG! 🔥', note: '', pinned: false },
+            { id: 8, category: 'emojis', text: 'WP! 👏', note: '', pinned: false },
+            { id: 9, category: 'slang', text: 'IDK', note: 'I don\'t know (Nem tudom)', pinned: false },
+            { id: 10, category: 'slang', text: 'OFC', note: 'Of course (Természetesen)', pinned: false },
+            { id: 11, category: 'slang', text: 'GG / WP', note: 'Good Game / Well Played (Jó játék / Szép volt)', pinned: false },
+            { id: 12, category: 'slang', text: 'RNG', note: 'Random Number Generator (Szerencsefaktor / kritikus)', pinned: false }
+        ];
+
+        let items = JSON.parse(localStorage.getItem('guildQuickChatData')) || DEFAULT_DATA;
+        let currentTab = 'phrases';
+        let editingId = null;
+        let combineMode = false;
+        let combinedBuffer = [];
+
+        function saveToStorage() { localStorage.setItem('guildQuickChatData', JSON.stringify(items)); }
+
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderItems();
+        }
+
+        function toggleCombine() {
+            combineMode = !combineMode;
+            document.getElementById('combineToggle').classList.toggle('active', combineMode);
+            document.getElementById('combineBar').classList.toggle('visible', combineMode);
+            if (!combineMode) { combinedBuffer = []; updateCombinePreview(); }
+        }
+
+        function clearCombined() { combinedBuffer = []; updateCombinePreview(); }
+
+        function updateCombinePreview() {
+            document.getElementById('combinePreview').innerText = combinedBuffer.length ? combinedBuffer.join(' ') : 'Tap items to combine...';
+        }
+
+        function handleCardClick(item) {
+            if (combineMode) {
+                combinedBuffer.push(item.text);
+                updateCombinePreview();
+                copyTextToClipboard(combinedBuffer.join(' '), 'Combined & Copied!');
+            } else {
+                copyTextToClipboard(item.text, 'Copied: ' + item.text);
+            }
+        }
+
+        function copyTextToClipboard(text, toastMsg) {
+            navigator.clipboard.writeText(text).then(() => showToast(toastMsg)).catch(() => {
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                showToast(toastMsg);
+            });
+        }
+
+        function renderItems() {
+            const list = document.getElementById('itemsList');
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            list.className = currentTab === 'emojis' ? 'items-list emoji-grid' : 'items-list';
+            list.innerHTML = '';
+
+            let filtered = items.filter(item => {
+                const matchesTab = query ? true : item.category === currentTab;
+                const matchesQuery = !query || item.text.toLowerCase().includes(query) || (item.note && item.note.toLowerCase().includes(query));
+                return matchesTab && matchesQuery;
+            });
+
+            filtered.sort((a, b) => (b.pinned === true) - (a.pinned === true));
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:#64748b; padding:30px; grid-column:1/-1;">No items found. Tap "+ Add New" to create one!</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card' + (item.pinned ? ' pinned' : '');
+                card.onclick = () => handleCardClick(item);
+
+                const content = document.createElement('div');
+                content.className = 'card-content';
+                const main = document.createElement('div');
+                main.className = 'card-main';
+                main.innerText = item.text;
+                content.appendChild(main);
+
+                if (item.note) {
+                    const note = document.createElement('div');
+                    note.className = 'card-note';
+                    note.innerText = item.note;
+                    content.appendChild(note);
+                }
+
+                const controls = document.createElement('div');
+                controls.className = 'card-controls';
+                controls.onclick = (e) => e.stopPropagation();
+
+                const starBtn = document.createElement('button');
+                starBtn.className = 'ctrl-btn' + (item.pinned ? ' starred' : '');
+                starBtn.innerText = '⭐';
+                starBtn.onclick = () => togglePin(item.id);
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'ctrl-btn';
+                editBtn.innerText = '✏️';
+                editBtn.onclick = () => openEditModal(item);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'ctrl-btn';
+                delBtn.innerText = '🗑️';
+                delBtn.onclick = () => deleteItem(item.id);
+
+                controls.appendChild(starBtn);
+                controls.appendChild(editBtn);
+                controls.appendChild(delBtn);
+                card.appendChild(content);
+                card.appendChild(controls);
+                list.appendChild(card);
+            });
+        }
+
+        function togglePin(id) {
+            const idx = items.findIndex(i => i.id === id);
+            if (idx > -1) { items[idx].pinned = !items[idx].pinned; saveToStorage(); renderItems(); }
+        }
+
+        function deleteItem(id) {
+            if (confirm('Delete this item?')) { items = items.filter(i => i.id !== id); saveToStorage(); renderItems(); }
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').innerText = 'Add New Item';
+            document.getElementById('itemCategory').value = currentTab;
+            document.getElementById('itemText').value = '';
+            document.getElementById('itemNote').value = '';
+            document.getElementById('itemModal').classList.add('open');
+            document.getElementById('itemText').focus();
+        }
+
+        function openEditModal(item) {
+            editingId = item.id;
+            document.getElementById('modalTitle').innerText = 'Edit Item';
+            document.getElementById('itemCategory').value = item.category;
+            document.getElementById('itemText').value = item.text;
+            document.getElementById('itemNote').value = item.note || '';
+            document.getElementById('itemModal').classList.add('open');
+        }
+
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('open'); }
+
+        function saveItem() {
+            const category = document.getElementById('itemCategory').value;
+            const text = document.getElementById('itemText').value.trim();
+            const note = document.getElementById('itemNote').value.trim();
+            if (!text) { showToast('Please enter text!'); return; }
+
+            if (editingId) {
+                const idx = items.findIndex(i => i.id === editingId);
+                if (idx > -1) { items[idx].category = category; items[idx].text = text; items[idx].note = note; }
+            } else {
+                items.unshift({ id: Date.now(), category, text, note, pinned: false });
+            }
+            saveToStorage();
+            closeModal('itemModal');
+            renderItems();
+            showToast('Saved!');
+        }
+
+        function openBackupModal() {
+            document.getElementById('backupData').value = JSON.stringify(items);
+            document.getElementById('backupModal').classList.add('open');
+        }
+
+        function copyBackup() { copyTextToClipboard(document.getElementById('backupData').value, 'Backup copied!'); }
+
+        function restoreBackup() {
+            try {
+                const parsed = JSON.parse(document.getElementById('backupData').value);
+                if (Array.isArray(parsed)) { items = parsed; saveToStorage(); renderItems(); closeModal('backupModal'); showToast('Database restored!'); }
+                else { alert('Invalid backup code!'); }
+            } catch (e) { alert('Invalid backup code!'); }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        renderItems();
+    </script>
+</body>
+</html>
