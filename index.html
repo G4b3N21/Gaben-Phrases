@@ -260,20 +260,6 @@
             }
         }
 
-
-        function handleCardClick(item) {
-            const finalText = resolvePlaceholders(item.text);
-            if (finalText === null) return;
-
-            if (combineMode) {
-                combinedBuffer.push(finalText);
-                updateCombinePreview();
-                copyTextToClipboard(combinedBuffer.join(' '), 'Combined & Copied!');
-            } else {
-                copyTextToClipboard(finalText, 'Copied: ' + finalText);
-            }
-        }
-
         function copyTextToClipboard(text, toastMsg) {
             navigator.clipboard.writeText(text).then(() => showToast(toastMsg)).catch(() => {
                 const temp = document.createElement('textarea');
