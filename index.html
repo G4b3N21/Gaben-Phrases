@@ -10,22 +10,8 @@
     <meta name="apple-mobile-web-app-title" content="Gaben QuickChat">
     <title>Gaben QuickChat</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        body {
-            min-height: 100vh;
-            background: radial-gradient(circle at top left, #1e1b4b, #09090b 60%, #0f172a);
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 16px 16px 90px 16px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { min-height: 100vh; background: radial-gradient(circle at top left, #1e1b4b, #09090b 60%, #0f172a); color: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 16px 16px 90px 16px; }
         .app-wrapper { width: 100%; max-width: 460px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         h1 { font-size: 1.4rem; font-weight: 800; background: linear-gradient(to right, #a855f7, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -34,8 +20,9 @@
         .icon-btn.active { background: rgba(168, 85, 247, 0.25); border-color: #a855f7; color: #fff; box-shadow: 0 0 12px rgba(168, 85, 247, 0.3); }
         .combine-bar { display: none; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; flex-direction: column; gap: 10px; }
         .combine-bar.visible { display: flex; }
+        .combine-top { display: flex; justify-content: space-between; align-items: center; }
         .combine-preview { font-size: 0.95rem; color: #fff; white-space: pre-wrap; word-break: break-word; line-height: 1.45; min-height: 44px; background: rgba(0, 0, 0, 0.28); padding: 10px 12px; border-radius: 10px; }
-        .combine-clear { align-self: flex-end; background: rgba(255, 255, 255, 0.12); border: none; color: #fca5a5; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .combine-clear { background: rgba(255, 255, 255, 0.12); border: none; color: #fca5a5; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
         .search-wrap { position: relative; margin-bottom: 14px; }
         .search-box { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 11px 36px 11px 14px; color: #fff; font-size: 0.95rem; outline: none; backdrop-filter: blur(12px); }
         .search-box:focus { border-color: #38bdf8; }
@@ -81,8 +68,8 @@
             </div>
         </div>
 
-         <div id="combineBar" class="combine-bar">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div id="combineBar" class="combine-bar">
+            <div class="combine-top">
                 <span id="heroCounter" style="font-size:0.78rem; font-weight:700; color:#38bdf8;"></span>
                 <div style="display:flex; gap:8px;">
                     <button class="combine-clear" style="color:#cbd5e1;" onclick="undoCombined()">↩️ Undo</button>
@@ -119,7 +106,7 @@
                 <option value="slang">📖 Slang / Abbreviation</option>
             </select>
             <input type="text" id="itemText" class="modal-input" placeholder="Text, Hero name, Emoji, or Slang">
-            <input type="text" id="itemNote" class="modal-input" placeholder="Short note / role / meaning (optional)">
+            <input type="text" id="itemNote" class="modal-input" placeholder="Short note / faction / meaning (optional)">
             <div class="modal-btns">
                 <button class="btn-cancel" onclick="closeModal('itemModal')">Cancel</button>
                 <button class="btn-save" onclick="saveItem()">Save</button>
@@ -147,26 +134,21 @@
     </div>
 
     <div id="toast" class="toast">Copied!</div>
-       <script>
+    <script>
         const DEFAULT_DATA = [
             { id: 1, category: 'phrases', text: 'Local Bridge down!', note: '', pinned: true },
             { id: 2, category: 'phrases', text: 'Global Bridge down!', note: '', pinned: true },
             { id: 3, category: 'phrases', text: 'Hi all! Chill day today.', note: '', pinned: false },
             { id: 4, category: 'phrases', text: 'Can someone drop a training team:', note: 'Use with Combine + Heroes', pinned: false },
             { id: 5, category: 'phrases', text: 'Attack [TARGET] on the Bridge!', note: 'Smart placeholder example', pinned: false },
-            { id: 6, category: 'heroes', text: 'Kayla', note: '', pinned: true },
-            { id: 7, category: 'heroes', text: 'Aidan', note: '', pinned: true },
+            { id: 6, category: 'heroes', text: 'Kayla', note: 'Chaos', pinned: true },
+            { id: 7, category: 'heroes', text: 'Aidan', note: 'Chaos', pinned: true },
             { id: 8, category: 'heroes', text: 'Guus', note: '', pinned: true },
-            { id: 9, category: 'heroes', text: 'Julius', note: '', pinned: false },
-            { id: 10, category: 'heroes', text: 'Oya', note: '', pinned: false },
-            { id: 11, category: 'emojis', text: 'BOOM! 💥', note: '', pinned: true },
-            { id: 12, category: 'emojis', text: '👊', note: '', pinned: true },
-            { id: 13, category: 'emojis', text: 'GG! 🔥', note: '', pinned: false },
-            { id: 14, category: 'emojis', text: 'WP! 👏', note: '', pinned: false },
-            { id: 15, category: 'slang', text: 'IDK', note: 'I don\'t know (Nem tudom)', pinned: false },
-            { id: 16, category: 'slang', text: 'OFC', note: 'Of course (Természetesen)', pinned: false },
-            { id: 17, category: 'slang', text: 'GG / WP', note: 'Good Game / Well Played (Jó játék / Szép volt)', pinned: false },
-            { id: 18, category: 'slang', text: 'RNG', note: 'Random Number Generator (Szerencsefaktor / kritikus)', pinned: false }
+            { id: 9, category: 'emojis', text: 'BOOM! 💥', note: '', pinned: true },
+            { id: 10, category: 'emojis', text: '👊', note: '', pinned: true },
+            { id: 11, category: 'emojis', text: 'GG! 🔥', note: '', pinned: false },
+            { id: 12, category: 'slang', text: 'IDK', note: 'I don\'t know (Nem tudom)', pinned: false },
+            { id: 13, category: 'slang', text: 'OFC', note: 'Of course (Természetesen)', pinned: false }
         ];
 
         let items = JSON.parse(localStorage.getItem('guildQuickChatData')) || DEFAULT_DATA;
@@ -259,7 +241,6 @@
                 copyTextToClipboard(finalText, 'Copied: ' + finalText);
             }
         }
-
         function copyTextToClipboard(text, toastMsg) {
             navigator.clipboard.writeText(text).then(() => showToast(toastMsg)).catch(() => {
                 const temp = document.createElement('textarea');
@@ -271,7 +252,8 @@
                 showToast(toastMsg);
             });
         }
-         function renderItems() {
+
+        function renderItems() {
             const list = document.getElementById('itemsList');
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             const isGrid = (currentTab === 'emojis' || currentTab === 'heroes') && !query;
